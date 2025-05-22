@@ -8,7 +8,6 @@ import styles from "styles/auth.module.scss";
 import { useAppSelector } from "@/redux/hooks";
 import { GooglePlusOutlined } from "@ant-design/icons";
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -54,33 +53,31 @@ const LoginPage = () => {
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log(tokenResponse);
-      const { data } = await axios(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        {
-          headers: {
-            Authorization: `Bearer ${tokenResponse?.access_token}`,
-          },
-        }
-      );
-      if (data && data.email) {
-        const res = await callLoginWithGoogle("GOOGLE", data.email);
+      const { access_token } = tokenResponse;
 
-        if (res?.data) {
-          setIsSubmit(true);
-          dispatch(setUserLoginInfo(res.data.user));
-          localStorage.setItem("access_token", res.data.access_token);
-          message.success("Đăng nhập tài khoản thành công!");
-          console.log(data.email);
-          window.location.href = callback ? callback : "/";
-        } else {
-          notification.error({
-            message: "login error !",
-            description:
-              res.message && Array.isArray(res.message) ? res.message : null,
-            duration: 5,
-          });
-        }
+      if (!access_token) {
+        notification.error({
+          message: "Google login failed",
+          description: "Missing access token from Google.",
+        });
+        return;
+      }
+
+      const res = await callLoginWithGoogle(access_token);
+
+      if (res?.data) {
+        localStorage.setItem("access_token", res.data.access_token);
+        dispatch(setUserLoginInfo(res.data.user));
+        message.success("Đăng nhập tài khoản thành công!");
+        window.location.href = callback ? callback : "/";
+      } else {
+        notification.error({
+          message: "Đăng nhập thất bại!",
+          description:
+            res.message && Array.isArray(res.message)
+              ? res.message[0]
+              : res.message,
+        });
       }
     },
   });

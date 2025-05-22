@@ -10,6 +10,7 @@ import {
   IPermission,
   IRole,
   ISubscribers,
+  IBanners,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -54,10 +55,13 @@ export const callLogout = () => {
   return axios.post<IBackendRes<string>>("/api/v1/auth/logout");
 };
 
-export const callLoginWithGoogle = (type: string, email: string) => {
-  const urlBackend = "/api/v1/auth/social-media";
-
-  return axios.post<IBackendRes<IAccount>>(urlBackend, { type, email });
+// callLoginWithGoogle.ts
+export const callLoginWithGoogle = (access_token: string) => {
+  const urlBackend = "/api/v1/auth/google/login";
+  return axios.post<IBackendRes<IAccount>>(urlBackend, {
+    access_token,
+    type: "GOOGLE",
+  });
 };
 
 /**
@@ -292,4 +296,26 @@ export const callFetchSubscriber = (query: string) => {
 
 export const callFetchSubscriberById = (id: string) => {
   return axios.get<IBackendRes<ISubscribers>>(`/api/v1/subscribers/${id}`);
+};
+
+// Module Banner
+export const callCreateBanner = (banner: IBanners) => {
+  return axios.post<IBackendRes<ISubscribers>>("/api/v1/banner-list", {
+    ...banner,
+  });
+};
+export const callUpdateBanner = (banner: IBanners) => {
+  return axios.patch<IBackendRes<ISubscribers>>("/api/v1/banner-list", {
+    ...banner,
+  });
+};
+
+export const callDeleteBanner = (id: string) => {
+  return axios.delete<IBackendRes<IBanners>>(`/api/v1/banner-list/${id}`);
+};
+
+export const callFetchBanner = (query: string) => {
+  return axios.get<IBackendRes<IModelPaginate<IBanners>>>(
+    `/api/v1/banner-list?${query}`
+  );
 };
